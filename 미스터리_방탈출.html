@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b0f">
+  <title>격리 구역 09 — 미스터리 방탈출</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b0f;
+      --panel: #10141a;
+      --panel-2: #151b22;
+      --line: #29313c;
+      --line-bright: #3c4957;
+      --text: #eef2f5;
+      --muted: #8995a3;
+      --accent: #d6ff52;
+      --accent-soft: rgba(214, 255, 82, .12);
+      --danger: #ff6c68;
+      --shadow: 0 30px 90px rgba(0, 0, 0, .55);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      letter-spacing: -.02em;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .28;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    button { font: inherit; }
+
+    .shell {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: min(100% - 32px, 980px);
+      margin: 0 auto;
+      padding: 24px 0 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 64px;
+      padding: 0 4px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      border: 1px solid var(--line-bright);
+      color: var(--accent);
+    }
+
+    .brand-mark svg { width: 18px; height: 18px; }
+
+    .brand-copy { min-width: 0; }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font: 600 .72rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      font-weight: 760;
+      letter-spacing: -.035em;
+      white-space: nowrap;
+    }
+
+    .records {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .record {
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: baseline;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .record-label {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .record-value {
+      color: var(--accent);
+      font: 700 1rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      padding: 46px 0 38px;
+    }
+
+    .game-wrap { width: min(100%, 720px); }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 2px 14px;
+      color: var(--muted);
+      font: 600 .75rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .signal { display: flex; gap: 5px; }
+    .signal span {
+      width: 22px;
+      height: 3px;
+      background: #242b34;
+      transition: background-color .3s ease, box-shadow .3s ease;
+    }
+    .signal span.on { background: var(--accent); box-shadow: 0 0 12px rgba(214,255,82,.28); }
+
+    .story-card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(26px, 5vw, 48px);
+      border: 1px solid var(--line-bright);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .story-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 52px;
+      height: 52px;
+      border-top: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+      opacity: .72;
+      pointer-events: none;
+    }
+
+    .story-content { transition: opacity .18s ease, transform .18s ease; }
+    .story-content.leaving { opacity: 0; transform: translateY(8px); }
+
+    .scene-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      color: var(--accent);
+      font: 700 .75rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .scene-tag::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background: currentColor;
+      box-shadow: 0 0 14px rgba(214,255,82,.48);
+    }
+
+    .story-title {
+      margin: 0 0 18px;
+      font-size: clamp(1.75rem, 5vw, 2.75rem);
+      line-height: 1.12;
+      font-weight: 800;
+      letter-spacing: -.055em;
+      text-wrap: balance;
+    }
+
+    .story-text {
+      min-height: 5.6em;
+      margin: 0;
+      color: #b9c2cb;
+      font-size: clamp(1rem, 2.3vw, 1.08rem);
+      line-height: 1.85;
+      word-break: keep-all;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 30px 0 18px;
+      color: #65707b;
+      font: 600 .7rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .12em;
+    }
+
+    .divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+
+    .choices { display: grid; gap: 10px; }
+
+    .hint-area {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .hint-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      justify-self: start;
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid var(--line-bright);
+      border-radius: 2px;
+      background: transparent;
+      color: #aeb8c2;
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 700;
+      transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+    }
+
+    .hint-btn svg { width: 16px; height: 16px; }
+    .hint-btn:hover, .hint-btn:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .hint-btn:disabled { opacity: .42; cursor: not-allowed; border-color: var(--line); color: var(--muted); }
+
+    .hint-message {
+      display: none;
+      margin: 0;
+      padding: 12px 14px;
+      border-left: 2px solid var(--accent);
+      background: var(--accent-soft);
+      color: #cdd5bc;
+      font-size: .88rem;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+    .hint-message.visible { display: block; }
+
+    .choice-btn, .restart-btn {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color .2s ease, background-color .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    .choice-btn {
+      display: grid;
+      grid-template-columns: 38px 1fr 20px;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      padding: 12px 16px 12px 12px;
+      text-align: left;
+      border-radius: 2px;
+    }
+
+    .choice-btn:hover, .choice-btn:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      transform: translateX(4px);
+    }
+
+    .choice-num {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line-bright);
+      color: var(--muted);
+      font: 700 .8rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .choice-btn:hover .choice-num, .choice-btn:focus-visible .choice-num {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .choice-label { font-size: .98rem; line-height: 1.45; }
+
+    .arrow {
+      color: #5c6874;
+      font-size: 1.2rem;
+      transition: color .2s ease, transform .2s ease;
+    }
+    .choice-btn:hover .arrow, .choice-btn:focus-visible .arrow { color: var(--accent); transform: translateX(3px); }
+
+    .ending-panel { display: none; }
+    .story-card.is-ending .play-panel { display: none; }
+    .story-card.is-ending .ending-panel { display: block; }
+
+    .ending-icon {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      margin-bottom: 24px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .ending-icon svg { width: 27px; height: 27px; }
+    .story-card.bad-ending .ending-icon { border-color: var(--danger); color: var(--danger); }
+    .story-card.bad-ending::after { border-color: var(--danger); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 1px;
+      margin: 30px 0 20px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .result-item { padding: 18px; background: var(--panel-2); }
+    .result-label { display: block; margin-bottom: 8px; color: var(--muted); font-size: .76rem; }
+    .result-value { display: block; color: var(--accent); font-size: 1.05rem; font-weight: 750; }
+    .bad-ending .result-value { color: var(--danger); }
+
+    .archive-summary {
+      display: none;
+      margin: 30px 0 20px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line-bright);
+    }
+    .archive-summary.visible { display: block; }
+
+    .archive-kicker {
+      margin: 0 0 9px;
+      color: var(--accent);
+      font: 700 .72rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .archive-title {
+      margin: 0 0 10px;
+      font-size: clamp(1.3rem, 3vw, 1.7rem);
+      letter-spacing: -.04em;
+    }
+
+    .archive-copy {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .archive-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .archive-stat { padding: 14px; background: #0c1015; }
+    .archive-stat span { display: block; margin-bottom: 6px; color: var(--muted); font-size: .7rem; }
+    .archive-stat strong { color: var(--text); font: 750 .95rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+    .archive-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .archive-entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 43px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      font-size: .82rem;
+    }
+    .archive-type {
+      flex: 0 0 auto;
+      color: var(--accent);
+      font: 700 .65rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .08em;
+    }
+    .archive-entry.bad .archive-type { color: var(--danger); }
+
+    .restart-btn {
+      min-height: 54px;
+      padding: 14px 20px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #11160a;
+      font-weight: 800;
+      border-radius: 2px;
+    }
+    .restart-btn:hover, .restart-btn:focus-visible { outline: none; background: #e4ff87; transform: translateY(-2px); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 4px 0;
+      border-top: 1px solid var(--line);
+      color: #5e6873;
+      font: 500 .7rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 24px, 980px); padding-top: 14px; }
+      .topbar { align-items: flex-start; }
+      .records { gap: 13px; }
+      .record { grid-template-columns: 1fr; gap: 4px; }
+      main { padding: 28px 0; }
+      .story-card { padding: 26px 20px 22px; }
+      .story-text { min-height: 0; }
+      .result-grid { grid-template-columns: 1fr; }
+      .archive-list { grid-template-columns: 1fr; }
+      footer span:last-child { display: none; }
+    }
+
+    @media (max-width: 420px) {
+      .brand .eyebrow { display: none; }
+      .brand h1 { font-size: .94rem; }
+      .brand-mark { width: 30px; height: 30px; }
+      .records { gap: 9px; }
+      .record-label { font-size: .67rem; }
+      .record-value { font-size: .9rem; }
+      .choice-btn { grid-template-columns: 34px 1fr 16px; gap: 9px; padding-right: 12px; }
+      .choice-num { width: 32px; height: 32px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar" aria-label="게임 기록">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M7 3h10v5l3 3-8 10-8-10 3-3V3Z"/><path d="M7 8h10M8 13h8"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <p class="eyebrow">Restricted archive</p>
+          <h1>격리 구역 09</h1>
+        </div>
+      </div>
+      <div class="records">
+        <div class="record">
+          <span class="record-label">최소 선택 기록</span>
+          <strong class="record-value" id="bestRecord">—</strong>
+        </div>
+        <div class="record">
+          <span class="record-label">찾아낸 엔딩 수</span>
+          <strong class="record-value"><span id="endingCount">0</span>/9</strong>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="game-wrap">
+        <div class="progress-row">
+          <span id="turnLabel">선택 00</span>
+          <div class="signal" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <section class="story-card" id="storyCard" aria-live="polite">
+          <div class="story-content" id="storyContent">
+            <div class="play-panel">
+              <div class="scene-tag" id="sceneTag">기억 복구 중</div>
+              <h2 class="story-title" id="storyTitle">낯선 각성</h2>
+              <p class="story-text" id="storyText"></p>
+               <div class="divider">행동을 선택하십시오</div>
+               <div class="choices" id="choices"></div>
+               <div class="hint-area">
+                 <button class="hint-btn" id="hintBtn" type="button">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18h6M10 22h4M8.4 14.5A7 7 0 1 1 15.6 14.5C14.5 15.3 14 16 14 18h-4c0-2-.5-2.7-1.6-3.5Z"/></svg>
+                   <span id="hintBtnLabel">미발견 엔딩 힌트 · 3회 남음</span>
+                 </button>
+                 <p class="hint-message" id="hintMessage" role="status" aria-live="polite"></p>
+               </div>
+             </div>
+
+            <div class="ending-panel">
+              <div class="ending-icon" id="endingIcon" aria-hidden="true"></div>
+              <div class="scene-tag" id="endingTag">기록 종료</div>
+              <h2 class="story-title" id="endingTitle"></h2>
+              <p class="story-text" id="endingText"></p>
+                <div class="result-grid">
+                <div class="result-item">
+                  <span class="result-label">선택한 횟수</span>
+                  <strong class="result-value" id="resultTurns"></strong>
+                </div>
+                <div class="result-item">
+                  <span class="result-label">도달한 엔딩 이름</span>
+                  <strong class="result-value" id="resultName"></strong>
+                  </div>
+                </div>
+                <section class="archive-summary" id="archiveSummary" aria-labelledby="archiveTitle">
+                  <p class="archive-kicker">Archive complete // 09 of 09</p>
+                  <h3 class="archive-title" id="archiveTitle">격리 구역 엔딩 기록 총정리</h3>
+                  <p class="archive-copy">모든 가능성을 확인했습니다. 당신이 수집한 아홉 개의 결말이 기록 보관소에 완전히 복원되었습니다.</p>
+                  <div class="archive-stats">
+                    <div class="archive-stat"><span>수집 완료</span><strong>9 / 9</strong></div>
+                    <div class="archive-stat"><span>해피 엔딩</span><strong id="archiveGoodCount">5</strong></div>
+                    <div class="archive-stat"><span>최소 선택</span><strong id="archiveBest">—</strong></div>
+                  </div>
+                  <ul class="archive-list" id="archiveList"></ul>
+                </section>
+                <button class="restart-btn" id="restartBtn" type="button">처음부터 다시하기</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <span>LAB-09 // ACCESS DENIED</span>
+      <span>선택에는 결과가 따른다</span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'lab09_escape_records_v1';
+    const TOTAL_ENDINGS = 9;
+
+    const scenes = {
+      start: {
+        tag: '기억 복구 중',
+        title: '낯선 각성',
+        text: '어두운 연구실에서 깨어났다. 책상 위에 열쇠가 있고 앞에는 굳게 닫힌 철문이 있다. 천장 스피커에서는 짧은 잡음이 반복된다.',
+        choices: [
+          ['열쇠를 줍는다', 'key'],
+          ['철문을 밀어본다', 'door'],
+          ['책상 아래를 살핀다', 'underDesk']
+        ]
+      },
+      key: {
+        tag: '단서 01', title: '차가운 열쇠',
+        text: '열쇠 손잡이에 「관찰실」이라는 각인이 있다. 철문 옆 카드 리더는 열쇠 구멍이 없고, 반대편 벽에는 금이 간 유리창이 보인다.',
+        choices: [['유리창 너머를 본다', 'window'], ['카드 리더에 열쇠를 댄다', 'readerKey']]
+      },
+      door: {
+        tag: '경고 01', title: '움직이지 않는 문',
+        text: '철문은 꿈쩍도 하지 않는다. 대신 문 아래로 푸른빛이 새어 나온다. 밀어낸 먼지 속에서 숫자 0417이 드러난다.',
+        choices: [['숫자를 기억하고 스피커를 조사한다', 'speaker'], ['문 아래 틈으로 손을 넣는다', 'doorGap']]
+      },
+      underDesk: {
+        tag: '단서 01', title: '숨겨진 단말기',
+        text: '책상 아래에서 휴대용 단말기를 찾았다. 화면에는 「피실험자 09 — 기억 동기화 64%」와 잠긴 기록 파일이 떠 있다.',
+        choices: [['기록 파일을 강제로 연다', 'file'], ['단말기의 전원을 끈다', 'powerOff']]
+      },
+      window: {
+        tag: '단서 02', title: '관찰실의 그림자',
+        text: '유리 너머 의자 위에 흰 가운이 놓여 있다. 주머니에서 사원 카드가 반쯤 보인다. 유리 아래에는 비상 개폐 레버가 있다.',
+        choices: [['열쇠로 관찰실 문을 연다', 'observeRoom'], ['비상 레버를 당긴다', 'alarmRoute']]
+      },
+      readerKey: {
+        tag: '경고 02', title: '잘못된 인증',
+        text: '카드 리더가 붉게 점멸한다. 「금속 오염 감지. 정화 절차 30초 후 시작」. 벽면 환풍구가 열리고 철문 아래 빛이 강해진다.',
+        choices: [['열쇠로 환풍구를 고정한다', 'vent'], ['철문 앞에서 구조를 기다린다', 'waitGas']]
+      },
+      speaker: {
+        tag: '단서 02', title: '잡음 속의 목소리',
+        text: '잡음 사이에서 자신의 목소리가 들린다. “0417은 날짜가 아니야. 네가 실패한 횟수야.” 스피커 덮개 뒤로 작은 버튼이 보인다.',
+        choices: [['버튼을 세 번 누른다', 'voiceTest'], ['0417을 카드 리더에 입력한다', 'codeDoor']]
+      },
+      doorGap: {
+        tag: '경고 02', title: '문 아래의 감촉',
+        text: '손끝에 카드 한 장이 닿는다. 끌어당기는 순간 반대편에서 누군가 카드와 함께 당신의 손목을 움켜잡는다.',
+        choices: [['손을 뿌리치고 카드를 잡는다', 'grabCard'], ['상대에게 누구인지 묻는다', 'askShadow']]
+      },
+      file: {
+        tag: '기록 02', title: '삭제되지 않은 영상',
+        text: '영상 속 당신은 연구실 책임자다. 실험체를 가두고 기억을 지우라는 명령을 내리고 있다. 마지막 프레임에는 숨겨진 관리자 메뉴가 찍혀 있다.',
+        choices: [['관리자 메뉴로 철문을 해제한다', 'admin'], ['영상을 삭제하고 단말기를 숨긴다', 'erase']]
+      },
+      powerOff: {
+        tag: '경고 02', title: '완전한 암흑',
+        text: '단말기를 끄자 비상 전력까지 함께 꺼진다. 어둠 속에서 철문 잠금장치가 풀리는 소리와 천천히 다가오는 발소리가 겹친다.',
+        choices: [['철문을 향해 달린다', 'darkRun'], ['책상 아래 숨는다', 'hide']]
+      },
+      observeRoom: {
+        tag: '단서 03', title: '주인의 카드',
+        text: '관찰실 안에서 사원 카드를 꺼냈다. 사진 속 인물은 분명 당신이다. 카드 뒷면에는 “탈출보다 진실을 먼저”라고 적혀 있다.',
+        choices: [['카드로 철문을 연다', 'freedom'], ['관찰 기록을 재생한다', 'truth']]
+      },
+      alarmRoute: {
+        tag: '경고 03', title: '봉쇄 해제',
+        text: '사이렌과 함께 철문이 열린다. 하지만 복도 양쪽에서 방호복을 입은 요원들이 달려온다. 천장에는 정비용 사다리가 내려와 있다.',
+        choices: [['열린 철문으로 돌파한다', 'captured'], ['사다리로 올라간다', 'rooftop']]
+      },
+      vent: {
+        tag: '단서 03', title: '좁은 우회로',
+        text: '열쇠를 끼워 환풍구 날개를 멈췄다. 안쪽에는 밖으로 이어진 통로와, “격리 대상은 자기 자신을 기억하지 못한다”는 메모가 있다.',
+        choices: [['통로 끝까지 기어간다', 'ventEscape'], ['메모를 들고 연구실로 돌아간다', 'loop']]
+      },
+      voiceTest: {
+        tag: '기록 03', title: '네 번째 신호',
+        text: '세 번째 입력 뒤 스피커가 묻는다. “이번에도 진실을 외면할 건가?” 버튼 옆에 녹음과 삭제, 두 개의 불빛이 켜진다.',
+        choices: [['녹음된 자백을 재생한다', 'confession'], ['모든 기록을 삭제한다', 'erase']]
+      },
+      codeDoor: {
+        tag: '단서 03', title: '열린 문, 닫힌 기억',
+        text: '0417을 입력하자 철문이 열린다. 복도 끝 출구와 “기억 복원실” 표지판이 서로 반대 방향에서 빛난다.',
+        choices: [['출구로 곧장 달린다', 'freedom'], ['기억 복원실로 간다', 'truth']]
+      },
+      grabCard: {
+        tag: '경고 03', title: '되찾은 카드',
+        text: '손목을 뿌리치고 카드를 빼냈다. 카드에는 당신의 얼굴과 최고 보안 등급이 찍혀 있다. 문은 이제 열 수 있다.',
+        choices: [['즉시 카드를 태그한다', 'captured'], ['카드의 홀로그램을 자세히 본다', 'cardSecret']]
+      },
+      askShadow: {
+        tag: '기록 03', title: '반대편의 나',
+        text: '상대는 당신과 똑같은 목소리로 답한다. “이번에는 네가 안쪽이군.” 손목을 놓은 뒤 카드와 작은 거울을 밀어 넣는다.',
+        choices: [['카드로 문을 연다', 'loop'], ['거울을 들여다본다', 'mirrorTruth']]
+      },
+      admin: {
+        tag: '단서 03', title: '관리자 권한',
+        text: '잠금은 해제됐지만 마지막 확인창이 뜬다. 「실험 종료 시 피실험자의 원래 기억을 복원하시겠습니까?」',
+        choices: [['기억을 복원하고 종료한다', 'truth'], ['복원 없이 문만 연다', 'freedom']]
+      },
+      erase: {
+        tag: '경고 03', title: '백지 상태',
+        text: '삭제가 시작되자 머릿속 기억도 함께 사라진다. 이름도, 목적도 흐릿해진다. 철문은 열렸지만 왜 나가야 하는지조차 알 수 없다.',
+        choices: [['그래도 문밖으로 나간다', 'emptyEscape'], ['익숙한 책상에 다시 눕는다', 'loop']]
+      },
+      darkRun: {
+        tag: '경고 03', title: '어둠 속 질주',
+        text: '열린 문을 지나 복도를 달린다. 발소리는 멎었지만 바닥의 유도등이 두 갈래로 나뉜다.',
+        choices: [['초록 유도등을 따른다', 'freedom'], ['붉은 비상등을 따른다', 'captured']]
+      },
+      hide: {
+        tag: '기록 03', title: '숨죽인 증언',
+        text: '책상 아래에서 두 연구원의 대화를 듣는다. “책임자가 또 자기 자신에게 실험했대.” 그들이 나간 뒤 관리자 카드가 바닥에 남는다.',
+        choices: [['카드를 들고 기억 복원실로 간다', 'truth'], ['카드로 즉시 출구를 연다', 'freedom']]
+      },
+      cardSecret: {
+        tag: '단서 04', title: '겹쳐진 얼굴',
+        text: '홀로그램 각도를 바꾸자 사진이 두 얼굴로 갈라진다. 하나는 당신, 다른 하나는 철문 반대편의 복제체다. 카드에는 단 한 명만 통과할 수 있다고 적혀 있다.',
+        choices: [['문을 열고 복제체와 함께 나간다', 'captured'], ['카드를 부러뜨리고 비상구를 찾는다', 'ventEscape']]
+      },
+      mirrorTruth: {
+        tag: '단서 04', title: '거울의 각인',
+        text: '거울 뒷면에 미세한 글씨가 있다. “원본은 거울을 들여다보지 않는다.” 반대편 존재가 다시 문을 두드리기 시작한다.',
+        choices: [['문을 열어 정체를 확인한다', 'loop'], ['카드를 버리고 환풍구로 간다', 'ventEscape']]
+      }
+    };
+
+    const endings = {
+      freedom: { good: true, name: '새벽의 탈출자', title: '차가운 새벽', text: '출구 문이 열리고 새벽 공기가 폐 깊숙이 들어온다. 기억은 완전하지 않지만, 당신은 스스로의 선택으로 격리 구역을 벗어났다.' },
+      truth: { good: true, name: '기억의 목격자', title: '모든 것이 돌아왔다', text: '당신은 연구 책임자이자 마지막 피실험자였다. 진실을 복원한 뒤 실험 데이터를 외부로 전송한다. 이제 이 방은 누구도 삼키지 못한다.' },
+      ventEscape: { good: true, name: '규칙 밖의 생존자', title: '설계도에 없던 길', text: '환풍 통로 끝의 철망을 밀어내자 빗소리가 들린다. 준비된 선택을 거부한 당신은 감시망 밖으로 사라졌다.' },
+      captured: { good: false, name: '격리 절차 완료', title: '기다리고 있던 사람들', text: '복도 끝에서 방호복 요원들이 당신을 제압한다. 흐려지는 시야 너머로 연구실 문이 다시 닫힌다. 다음 실험이 곧 시작될 것이다.' },
+      loop: { good: false, name: '영원한 0417', title: '다시, 낯선 각성', text: '순간 눈앞이 하얗게 번쩍인다. 다시 눈을 떴을 때 책상 위에는 열쇠가 있고, 앞에는 굳게 닫힌 철문이 있다.' },
+      waitGas: { good: false, name: '침묵의 정화', title: '구조 신호 없음', text: '구조 방송은 끝내 들리지 않는다. 희뿌연 기체가 연구실을 채우고, 당신의 마지막 기억까지 조용히 지워진다.' },
+      confession: { good: true, name: '0418번째 선택', title: '실험의 종결', text: '자신이 남긴 자백이 시설 전체에 송출된다. 철문은 자동으로 열리고 중앙 시스템은 영구 정지한다. 실패의 횟수는 이제 더 늘지 않는다.' },
+      rooftop: { good: true, name: '옥상의 신호', title: '빛이 닿는 곳', text: '사다리 끝 옥상에서 외부 구조대에 신호를 보낸다. 아래의 요원들은 멈춰 서고, 격리 구역의 비밀이 세상에 드러난다.' },
+      emptyEscape: { good: false, name: '이름 없는 귀환', title: '밖이지만, 누구인가', text: '당신은 시설을 빠져나왔지만 자신의 이름도 과거도 없다. 자유를 얻은 사람은 더 이상 예전의 당신이 아니었다.' }
+    };
+
+    let currentScene = 'start';
+    let turns = 0;
+    let locked = false;
+
+    const card = document.getElementById('storyCard');
+    const content = document.getElementById('storyContent');
+    const sceneTag = document.getElementById('sceneTag');
+    const storyTitle = document.getElementById('storyTitle');
+    const storyText = document.getElementById('storyText');
+    const choicesBox = document.getElementById('choices');
+    const turnLabel = document.getElementById('turnLabel');
+    const bestRecord = document.getElementById('bestRecord');
+    const endingCount = document.getElementById('endingCount');
+    const signals = [...document.querySelectorAll('.signal span')];
+    const hintBtn = document.getElementById('hintBtn');
+    const hintBtnLabel = document.getElementById('hintBtnLabel');
+    const hintMessage = document.getElementById('hintMessage');
+    const archiveSummary = document.getElementById('archiveSummary');
+    const archiveList = document.getElementById('archiveList');
+
+    function readRecords() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          return {
+            best: Number.isInteger(data?.best) && data.best > 0 ? data.best : null,
+            found: Array.isArray(data?.found) ? [...new Set(data.found)].filter(name => Object.values(endings).some(e => e.name === name)) : [],
+            hintsUsed: Number.isInteger(data?.hintsUsed) ? Math.min(Math.max(data.hintsUsed, 0), 3) : 0
+          };
+      } catch { return { best: null, found: [], hintsUsed: 0 }; }
+    }
+
+    function writeRecords(records) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch {}
+    }
+
+    function updateRecordsDisplay() {
+      const records = readRecords();
+      bestRecord.textContent = records.best ? `${records.best}회` : '—';
+      endingCount.textContent = Math.min(records.found.length, TOTAL_ENDINGS);
+      const hintsLeft = Math.max(0, 3 - records.hintsUsed);
+      hintBtnLabel.textContent = records.found.length >= TOTAL_ENDINGS
+        ? '모든 엔딩 발견 완료'
+        : hintsLeft > 0 ? `미발견 엔딩 힌트 · ${hintsLeft}회 남음` : '힌트를 모두 사용했습니다';
+      hintBtn.disabled = hintsLeft === 0 || records.found.length >= TOTAL_ENDINGS;
+    }
+
+    function updateProgress() {
+      turnLabel.textContent = `선택 ${String(turns).padStart(2, '0')}`;
+      signals.forEach((bar, index) => bar.classList.toggle('on', index < Math.min(turns, signals.length)));
+    }
+
+    function renderScene(id) {
+      const scene = scenes[id];
+      if (!scene) return;
+      currentScene = id;
+      card.classList.remove('is-ending', 'bad-ending');
+      sceneTag.textContent = scene.tag;
+      storyTitle.textContent = scene.title;
+      storyText.textContent = scene.text;
+      choicesBox.replaceChildren();
+      hintMessage.textContent = '';
+      hintMessage.classList.remove('visible');
+
+      scene.choices.forEach(([label, target], index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'choice-btn';
+        button.innerHTML = `<span class="choice-num">${String(index + 1).padStart(2, '0')}</span><span class="choice-label"></span><span class="arrow" aria-hidden="true">→</span>`;
+        button.querySelector('.choice-label').textContent = label;
+        button.addEventListener('click', () => choose(target));
+        choicesBox.appendChild(button);
+      });
+      updateProgress();
+      updateRecordsDisplay();
+      requestAnimationFrame(() => choicesBox.querySelector('button')?.focus({ preventScroll: true }));
+    }
+
+    function reachableEndings(target, visited = new Set()) {
+      if (endings[target]) return [target];
+      if (!scenes[target] || visited.has(target)) return [];
+      visited.add(target);
+      return [...new Set(scenes[target].choices.flatMap(([, next]) => reachableEndings(next, new Set(visited))))];
+    }
+
+    function showHint() {
+      if (locked || card.classList.contains('is-ending')) return;
+      const records = readRecords();
+      if (records.hintsUsed >= 3 || records.found.length >= TOTAL_ENDINGS) return;
+
+      const foundNames = new Set(records.found);
+      const scene = scenes[currentScene];
+      const recommendedIndex = scene.choices.findIndex(([, target]) =>
+        reachableEndings(target).some(endingId => !foundNames.has(endings[endingId].name))
+      );
+
+      records.hintsUsed += 1;
+      writeRecords(records);
+      hintMessage.textContent = recommendedIndex >= 0
+        ? `감지된 미확인 기록: ${recommendedIndex + 1}번 「${scene.choices[recommendedIndex][0]}」 선택이 아직 발견하지 않은 엔딩으로 이어질 수 있습니다.`
+        : '이 경로에서 발견할 수 있는 엔딩은 이미 확인했습니다. 처음부터 다시 시작해 다른 선택을 시도하세요.';
+      hintMessage.classList.add('visible');
+      updateRecordsDisplay();
+    }
+
+    function choose(target) {
+      if (locked) return;
+      locked = true;
+      turns += 1;
+      content.classList.add('leaving');
+
+      window.setTimeout(() => {
+        if (endings[target]) renderEnding(target);
+        else renderScene(target);
+        content.classList.remove('leaving');
+        locked = false;
+      }, 190);
+    }
+
+    function renderEnding(id) {
+      const ending = endings[id];
+      const records = readRecords();
+      records.best = records.best === null ? turns : Math.min(records.best, turns);
+      if (!records.found.includes(ending.name)) records.found.push(ending.name);
+      writeRecords(records);
+
+      card.classList.add('is-ending');
+      card.classList.toggle('bad-ending', !ending.good);
+      document.getElementById('endingTag').textContent = ending.good ? '탈출 성공' : '격리 실패';
+      document.getElementById('endingTitle').textContent = ending.title;
+      document.getElementById('endingText').textContent = ending.text;
+      document.getElementById('resultTurns').textContent = `${turns}회`;
+      document.getElementById('resultName').textContent = ending.name;
+      document.getElementById('endingIcon').innerHTML = ending.good
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v10M12 18.5v.5"/><circle cx="12" cy="12" r="10"/></svg>';
+      renderArchiveSummary(records);
+      updateProgress();
+      updateRecordsDisplay();
+      document.getElementById('restartBtn').focus({ preventScroll: true });
+    }
+
+    function renderArchiveSummary(records) {
+      const isComplete = records.found.length >= TOTAL_ENDINGS;
+      archiveSummary.classList.toggle('visible', isComplete);
+      if (!isComplete) return;
+
+      const endingEntries = Object.values(endings);
+      document.getElementById('archiveGoodCount').textContent = String(endingEntries.filter(item => item.good).length);
+      document.getElementById('archiveBest').textContent = records.best ? `${records.best}회` : '—';
+      archiveList.replaceChildren();
+
+      endingEntries.forEach(item => {
+        const entry = document.createElement('li');
+        entry.className = `archive-entry${item.good ? '' : ' bad'}`;
+        const name = document.createElement('span');
+        name.textContent = item.name;
+        const type = document.createElement('span');
+        type.className = 'archive-type';
+        type.textContent = item.good ? 'HAPPY' : 'BAD';
+        entry.append(name, type);
+        archiveList.appendChild(entry);
+      });
+    }
+
+    function restart() {
+      if (locked) return;
+      locked = true;
+      content.classList.add('leaving');
+      window.setTimeout(() => {
+        turns = 0;
+        renderScene('start');
+        content.classList.remove('leaving');
+        locked = false;
+      }, 190);
+    }
+
+    document.getElementById('restartBtn').addEventListener('click', restart);
+    hintBtn.addEventListener('click', showHint);
+    updateRecordsDisplay();
+    renderScene('start');
+  </script>
+</body>
+</html>
